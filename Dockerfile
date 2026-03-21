@@ -12,7 +12,7 @@ ENV TZ=Europe/Madrid
 
 WORKDIR /app
 COPY --from=go /app/app .
-#COPY --from=go /app/migrations ./migrations
+COPY --from=go /app/migrations ./migrations
 
 EXPOSE 4000
 CMD ["./app"]

@@ -3,11 +3,15 @@ package main
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"flag"
 	"log/slog"
 	"os"
 	"time"
 
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
 )
 
@@ -49,6 +53,26 @@ func main() {
 	defer db.Close()
 
 	logger.Info("database connection pool has been established successfully")
+
+	migrationDriver, err := postgres.WithInstance(db, &postgres.Config{})
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
+	migrator, err := migrate.NewWithDatabaseInstance("file:///app/migrations", "postgres", migrationDriver)
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
+	err = migrator.Up()
+	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
+	logger.Info("database migrations have been applied")
 
 	app := application{
 		config: cfg,
