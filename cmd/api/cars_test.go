@@ -2,12 +2,15 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"gearboxd/internal/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 func TestCreateCarHandler(t *testing.T) {
@@ -74,6 +77,46 @@ func TestCreateCarHandler(t *testing.T) {
 			if rr.Code == http.StatusCreated {
 				assert.Equal(t, rr.Header().Get("Location"), fmt.Sprintf("/v1/cars/%d", 1))
 			}
+		})
+	}
+}
+
+func TestGetCarHandler(t *testing.T) {
+	tests := []struct {
+		name         string
+		ID           int
+		expectedCode int
+	}{
+		{
+			name:         "Returns a car",
+			ID:           1,
+			expectedCode: http.StatusOK,
+		},
+		{
+			name:         "Returns 404 not found",
+			ID:           2,
+			expectedCode: http.StatusNotFound,
+		},
+		{
+			name:         "Invalid ID",
+			ID:           0,
+			expectedCode: http.StatusNotFound,
+		},
+	}
+
+	app := newTestApplication(t, nil)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rr := httptest.NewRecorder()
+
+			req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/v1/cars/%d", tt.ID), nil)
+			req = req.WithContext(context.WithValue(req.Context(), httprouter.ParamsKey, httprouter.Params{
+				{Key: "id", Value: fmt.Sprintf("%d", tt.ID)},
+			}))
+			app.getCarHandler(rr, req)
+
+			assert.Equal(t, rr.Code, tt.expectedCode)
 		})
 	}
 }

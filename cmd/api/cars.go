@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"gearboxd/internal/data"
 	"gearboxd/internal/validator"
@@ -64,14 +65,18 @@ func (app *application) createCarHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (app *application) getCarHandler(w http.ResponseWriter, r *http.Request) {
-	ID, err := app.readIdParam(r)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
+	id, err := app.readIdParam(r)
+	if err != nil || id < 1 {
+		app.entityNotFoundResponse(w, r)
 		return
 	}
 
-	car, err := app.models.Cars.Get(ID)
+	car, err := app.models.Cars.Get(id)
 	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.entityNotFoundResponse(w, r)
+		}
 		app.serverErrorResponse(w, r, err)
 		return
 	}

@@ -33,3 +33,10 @@ func (m *MockCarModel) Insert(car *data.Car) error {
 	m.cars = append(m.cars, *car)
 	return nil
 }
+
+func (m *MockCarModel) Get(ID int64) (*data.Car, error) {
+	if ID == 1 {
+		return &data.Car{ID: 1}, nil
+	}
+	return nil, data.ErrRecordNotFound
+}
