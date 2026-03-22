@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"flag"
+	"gearboxd/internal/data"
 	"log/slog"
 	"os"
 	"time"
@@ -28,6 +29,7 @@ type config struct {
 type application struct {
 	config config
 	logger *slog.Logger
+	models data.Models
 }
 
 func main() {
@@ -74,9 +76,12 @@ func main() {
 
 	logger.Info("database migrations have been applied")
 
+	models := data.NewModels(db)
+
 	app := application{
 		config: cfg,
 		logger: logger,
+		models: models,
 	}
 
 	err = app.serve()

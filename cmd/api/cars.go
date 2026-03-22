@@ -1,0 +1,65 @@
+package main
+
+import (
+	"fmt"
+	"gearboxd/internal/data"
+	"gearboxd/internal/validator"
+	"net/http"
+
+	"github.com/shopspring/decimal"
+)
+
+func (app *application) createCarHandler(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		Make        string  `json:"make"`
+		Model       string  `json:"model"`
+		Year        int     `json:"year"`
+		Description string  `json:"description"`
+		ImageURL    string  `json:"image_url"`
+		Gearbox     string  `json:"gearbox"`
+		Drivetrain  string  `json:"drivetrain"`
+		Horsepower  int     `json:"horsepower"`
+		Fuel        string  `json:"fuel"`
+		PriceNew    float64 `json:"price_new"`
+	}
+
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	car := &data.Car{
+		Make:        input.Make,
+		Model:       input.Model,
+		Year:        input.Year,
+		Description: input.Description,
+		ImageURL:    input.ImageURL,
+		Gearbox:     input.Gearbox,
+		Drivetrain:  input.Drivetrain,
+		Horsepower:  input.Horsepower,
+		Fuel:        input.Fuel,
+		PriceNew:    decimal.NewFromFloat(input.PriceNew),
+	}
+
+	v := validator.New()
+	if data.ValidateCar(v, car); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	err = app.models.Cars.Insert(car)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	headers := make(http.Header)
+	headers.Set("Location", fmt.Sprintf("/v1/cars/%d", car.ID))
+
+	err = app.writeJSON(w, http.StatusCreated, envelope{"car": car}, headers)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+
+}
