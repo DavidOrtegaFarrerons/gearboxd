@@ -29,6 +29,7 @@ type MockCarModel struct {
 }
 
 func (m *MockCarModel) Insert(car *data.Car) error {
+	car.ID = int64(len(m.cars) + 1)
 	m.cars = append(m.cars, *car)
 	return nil
 }
