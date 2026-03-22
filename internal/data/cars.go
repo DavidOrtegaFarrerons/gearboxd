@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"gearboxd/internal/validator"
 	"time"
@@ -49,6 +50,7 @@ func ValidateCar(v *validator.Validator, car *Car) {
 
 type CarModelInterface interface {
 	Insert(car *Car) error
+	Get(ID int64) (*Car, error)
 }
 type CarModel struct {
 	DB *sql.DB
@@ -78,4 +80,40 @@ RETURNING id, created_at, version
 	}
 
 	return m.DB.QueryRowContext(ctx, query, args...).Scan(&car.ID, &car.CreatedAt, &car.Version)
+}
+
+func (m *CarModel) Get(ID int64) (*Car, error) {
+	query := `SELECT id, make, model, year, description, image_url, gearbox, drivetrain, horsepower, fuel, price_new, version
+	FROM cars
+	WHERE id = $1`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var car Car
+	err := m.DB.QueryRowContext(ctx, query, ID).Scan(
+		&car.ID,
+		&car.Make,
+		&car.Model,
+		&car.Year,
+		&car.Description,
+		&car.ImageURL,
+		&car.Gearbox,
+		&car.Drivetrain,
+		&car.Horsepower,
+		&car.Fuel,
+		&car.PriceNew,
+		&car.Version,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &car, nil
 }

@@ -1,0 +1,30 @@
+info:
+  name: Create Car
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{domain}}/v1/cars"
+  body:
+    type: json
+    data: |-
+      {
+          "make": "Toyota",
+          "model": "Supra MK4",
+          "year": 1993,
+          "description": "The legendary 2JZ-powered Supra, one of the most iconic Japanese sports cars ever built.",
+          "image_url": "https://example.com/supra-mk4.jpg",
+          "gearbox": "manual",
+          "drivetrain": "RWD",
+          "horsepower": 320,
+          "fuel": "gas",
+          "price_new": 35000.00
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
