@@ -50,7 +50,8 @@ func ValidateCar(v *validator.Validator, car *Car) {
 
 type CarModelInterface interface {
 	Insert(car *Car) error
-	Get(ID int64) (*Car, error)
+	Get(id int64) (*Car, error)
+	Delete(id int64) error
 }
 type CarModel struct {
 	DB *sql.DB
@@ -82,7 +83,7 @@ RETURNING id, created_at, version
 	return m.DB.QueryRowContext(ctx, query, args...).Scan(&car.ID, &car.CreatedAt, &car.Version)
 }
 
-func (m *CarModel) Get(ID int64) (*Car, error) {
+func (m *CarModel) Get(id int64) (*Car, error) {
 	query := `SELECT id, make, model, year, description, image_url, gearbox, drivetrain, horsepower, fuel, price_new, version
 	FROM cars
 	WHERE id = $1`
@@ -91,7 +92,7 @@ func (m *CarModel) Get(ID int64) (*Car, error) {
 	defer cancel()
 
 	var car Car
-	err := m.DB.QueryRowContext(ctx, query, ID).Scan(
+	err := m.DB.QueryRowContext(ctx, query, id).Scan(
 		&car.ID,
 		&car.Make,
 		&car.Model,
@@ -116,4 +117,31 @@ func (m *CarModel) Get(ID int64) (*Car, error) {
 	}
 
 	return &car, nil
+}
+
+func (m *CarModel) Delete(id int64) error {
+	if id < 1 {
+		return ErrRecordNotFound
+	}
+
+	query := `DELETE FROM cars WHERE id = $1`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	result, err := m.DB.ExecContext(ctx, query, id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return ErrRecordNotFound
+	}
+
+	return nil
 }

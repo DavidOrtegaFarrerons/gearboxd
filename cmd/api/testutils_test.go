@@ -40,3 +40,14 @@ func (m *MockCarModel) Get(ID int64) (*data.Car, error) {
 	}
 	return nil, data.ErrRecordNotFound
 }
+
+func (m *MockCarModel) Delete(id int64) error {
+	for i, car := range m.cars {
+		if car.ID == id {
+			m.cars = append(m.cars[:i], m.cars[i+1:]...)
+			return nil
+		}
+	}
+
+	return data.ErrRecordNotFound
+}
