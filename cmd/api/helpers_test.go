@@ -55,7 +55,7 @@ func TestWriteJson(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
-			app := newTestApplication(t, &config{env: tt.appEnv})
+			app := newTestApplication(t, &config{env: tt.appEnv}, nil)
 
 			err := app.writeJSON(rr, tt.status, tt.envelope, tt.header)
 			if err != nil {

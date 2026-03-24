@@ -1,13 +1,19 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"gearboxd/internal/data"
 	"io"
 	"log/slog"
+	"net/http"
+	"net/http/httptest"
 	"testing"
+
+	"github.com/julienschmidt/httprouter"
 )
 
-func newTestApplication(t *testing.T, cfg *config) *application {
+func newTestApplication(t *testing.T, cfg *config, models *data.Models) *application {
 	if cfg == nil {
 		cfg = &config{
 			env:  "dev",
@@ -15,13 +21,24 @@ func newTestApplication(t *testing.T, cfg *config) *application {
 		}
 	}
 
+	if models == nil {
+		models = &data.Models{
+			Cars: &MockCarModel{make([]data.Car, 0)},
+		}
+	}
+
 	return &application{
 		config: *cfg,
 		logger: slog.New(slog.NewTextHandler(io.Discard, nil)),
-		models: data.Models{
-			Cars: &MockCarModel{make([]data.Car, 0)},
-		},
+		models: *models,
 	}
+}
+
+func createTestRequestWithIdParam(t *testing.T, requestMethod, route string, id int) *http.Request {
+	req := httptest.NewRequest(requestMethod, fmt.Sprintf("%s/%d", route, id), nil)
+	return req.WithContext(context.WithValue(req.Context(), httprouter.ParamsKey, httprouter.Params{
+		{Key: "id", Value: fmt.Sprintf("%d", id)},
+	}))
 }
 
 type MockCarModel struct {

@@ -2,15 +2,13 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"gearboxd/internal/assert"
+	"gearboxd/internal/data"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"github.com/julienschmidt/httprouter"
 )
 
 func TestCreateCarHandler(t *testing.T) {
@@ -59,7 +57,7 @@ func TestCreateCarHandler(t *testing.T) {
 		},
 	}
 
-	app := newTestApplication(t, nil)
+	app := newTestApplication(t, nil, nil)
 
 	for _, tt := range tests {
 		t.Run(tt.Name, func(t *testing.T) {
@@ -104,17 +102,65 @@ func TestGetCarHandler(t *testing.T) {
 		},
 	}
 
-	app := newTestApplication(t, nil)
+	app := newTestApplication(t, nil, nil)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
 
-			req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/v1/cars/%d", tt.ID), nil)
-			req = req.WithContext(context.WithValue(req.Context(), httprouter.ParamsKey, httprouter.Params{
-				{Key: "id", Value: fmt.Sprintf("%d", tt.ID)},
-			}))
+			req := createTestRequestWithIdParam(t, http.MethodGet, "/v1/cars", tt.ID)
 			app.getCarHandler(rr, req)
+
+			assert.Equal(t, rr.Code, tt.expectedCode)
+		})
+	}
+}
+
+func TestDeleteCarHandler(t *testing.T) {
+	tests := []struct {
+		name         string
+		ID           int
+		expectedCode int
+	}{
+		{
+			name:         "Deletes a car",
+			ID:           1,
+			expectedCode: http.StatusOK,
+		},
+		{
+			name:         "Returns 404 not found",
+			ID:           7,
+			expectedCode: http.StatusNotFound,
+		},
+		{
+			name:         "Invalid ID",
+			ID:           0,
+			expectedCode: http.StatusNotFound,
+		},
+	}
+
+	cars := []data.Car{
+		{
+			ID: 1,
+		},
+		{
+			ID: 2,
+		},
+	}
+
+	models := &data.Models{
+		Cars: &MockCarModel{cars: cars},
+	}
+
+	app := newTestApplication(t, nil, models)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rr := httptest.NewRecorder()
+
+			req := createTestRequestWithIdParam(t, http.MethodGet, "/v1/cars", tt.ID)
+
+			app.deleteCarHandler(rr, req)
 
 			assert.Equal(t, rr.Code, tt.expectedCode)
 		})
