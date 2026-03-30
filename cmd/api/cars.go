@@ -6,6 +6,7 @@ import (
 	"gearboxd/internal/data"
 	"gearboxd/internal/validator"
 	"net/http"
+	"strconv"
 
 	"github.com/shopspring/decimal"
 )
@@ -78,6 +79,104 @@ func (app *application) getCarHandler(w http.ResponseWriter, r *http.Request) {
 			app.entityNotFoundResponse(w, r)
 		}
 		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"car": car}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+func (app *application) updateCarHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := app.readIdParam(r)
+	if err != nil || id < 1 {
+		app.entityNotFoundResponse(w, r)
+		return
+	}
+
+	var input struct {
+		Make        *string          `json:"make"`
+		Model       *string          `json:"model"`
+		Year        *int             `json:"year"`
+		Description *string          `json:"description"`
+		ImageURL    *string          `json:"image_url"`
+		Gearbox     *string          `json:"gearbox"`
+		Drivetrain  *string          `json:"drivetrain"`
+		Horsepower  *int             `json:"horsepower"`
+		Fuel        *string          `json:"fuel"`
+		PriceNew    *decimal.Decimal `json:"price_new"`
+	}
+
+	car, err := app.models.Cars.Get(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.entityNotFoundResponse(w, r)
+		}
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	if r.Header.Get("X-Expected-Version") != "" {
+		if strconv.Itoa(car.Version) != r.Header.Get("X-Expected-Version") {
+			app.editConflictResponse(w, r)
+			return
+		}
+	}
+
+	err = app.readJSON(w, r, &input)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	if input.Make != nil {
+		car.Make = *input.Make
+	}
+	if input.Model != nil {
+		car.Model = *input.Model
+	}
+	if input.Year != nil {
+		car.Year = *input.Year
+	}
+	if input.Description != nil {
+		car.Description = *input.Description
+	}
+	if input.ImageURL != nil {
+		car.ImageURL = *input.ImageURL
+	}
+	if input.Gearbox != nil {
+		car.Gearbox = *input.Gearbox
+	}
+	if input.Drivetrain != nil {
+		car.Drivetrain = *input.Drivetrain
+	}
+	if input.Horsepower != nil {
+		car.Horsepower = *input.Horsepower
+	}
+	if input.Fuel != nil {
+		car.Fuel = *input.Fuel
+	}
+	if input.PriceNew != nil {
+		car.PriceNew = *input.PriceNew
+	}
+
+	v := validator.New()
+	if data.ValidateCar(v, car); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	err = app.models.Cars.Update(car)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrEditConflict):
+			app.editConflictResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+
 		return
 	}
 

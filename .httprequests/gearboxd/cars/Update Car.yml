@@ -1,0 +1,30 @@
+info:
+  name: Update Car
+  type: http
+  seq: 4
+
+http:
+  method: PUT
+  url: "{{domain}}/v1/cars/1"
+  body:
+    type: json
+    data: |-
+      {
+          "make": "Seat",
+          "model": "Ibiza",
+          "year": 2003,
+          "description": "Best car ever.",
+          "image_url": "https://example.com/seat-ibiza.jpg",
+          "gearbox": "manual",
+          "drivetrain": "FWD",
+          "horsepower": 105,
+          "fuel": "gas",
+          "price_new": 15000.00
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

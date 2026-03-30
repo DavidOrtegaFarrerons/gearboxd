@@ -21,8 +21,8 @@ func (app *application) errorResponse(w http.ResponseWriter, r *http.Request, st
 	}
 }
 
-func (app *application) serverErrorResponse(w http.ResponseWriter, r *http.Request, message any) {
-	app.errorResponse(w, r, http.StatusInternalServerError, message)
+func (app *application) serverErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
+	app.errorResponse(w, r, http.StatusInternalServerError, err.Error())
 }
 
 func (app *application) badRequestResponse(w http.ResponseWriter, r *http.Request, err error) {
@@ -35,4 +35,8 @@ func (app *application) failedValidationResponse(w http.ResponseWriter, r *http.
 
 func (app *application) entityNotFoundResponse(w http.ResponseWriter, r *http.Request) {
 	app.errorResponse(w, r, http.StatusNotFound, "the requested resource could not be found")
+}
+
+func (app *application) editConflictResponse(w http.ResponseWriter, r *http.Request) {
+	app.errorResponse(w, r, http.StatusConflict, "there was an edit conflict, please try again later")
 }

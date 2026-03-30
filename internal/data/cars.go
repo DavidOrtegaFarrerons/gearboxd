@@ -52,6 +52,7 @@ type CarModelInterface interface {
 	Insert(car *Car) error
 	Get(id int64) (*Car, error)
 	Delete(id int64) error
+	Update(car *Car) error
 }
 type CarModel struct {
 	DB *sql.DB
@@ -117,6 +118,43 @@ func (m *CarModel) Get(id int64) (*Car, error) {
 	}
 
 	return &car, nil
+}
+
+func (m *CarModel) Update(car *Car) error {
+	query := `UPDATE cars 
+	SET make = $1, model = $2, year = $3, description = $4, image_url = $5, gearbox = $6, drivetrain = $7, horsepower = $8, fuel = $9, price_new = $10, version = version + 1
+	WHERE id = $11 AND version = $12
+	RETURNING version`
+
+	args := []any{
+		car.Make,
+		car.Model,
+		car.Year,
+		car.Description,
+		car.ImageURL,
+		car.Gearbox,
+		car.Drivetrain,
+		car.Horsepower,
+		car.Fuel,
+		car.PriceNew,
+		car.ID,
+		car.Version,
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&car.Version)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return ErrEditConflict
+		default:
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (m *CarModel) Delete(id int64) error {

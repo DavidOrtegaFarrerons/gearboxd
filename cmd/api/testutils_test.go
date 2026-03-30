@@ -45,6 +45,11 @@ type MockCarModel struct {
 	cars []data.Car
 }
 
+func (m *MockCarModel) Update(car *data.Car) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (m *MockCarModel) Insert(car *data.Car) error {
 	car.ID = int64(len(m.cars) + 1)
 	m.cars = append(m.cars, *car)
