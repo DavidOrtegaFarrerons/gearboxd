@@ -113,8 +113,10 @@ func (app *application) updateCarHandler(w http.ResponseWriter, r *http.Request)
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
 			app.entityNotFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
 		}
-		app.serverErrorResponse(w, r, err)
+
 		return
 	}
 
@@ -127,7 +129,7 @@ func (app *application) updateCarHandler(w http.ResponseWriter, r *http.Request)
 
 	err = app.readJSON(w, r, &input)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+		app.badRequestResponse(w, r, err)
 		return
 	}
 
