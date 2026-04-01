@@ -44,6 +44,7 @@ func ValidateCar(v *validator.Validator, car *Car) {
 	v.Check(car.ImageURL != "", "image_url", "image_url cannot be empty")
 	v.Check(validator.PermittedValue(car.Gearbox, gearboxOptions...), "gearbox", fmt.Sprintf("gearbox must be one of: %+v", gearboxOptions))
 	v.Check(validator.PermittedValue(car.Drivetrain, drivetrainOptions...), "drivetrain", fmt.Sprintf("drivetrain must be one of: %+v", drivetrainOptions))
+	v.Check(car.Horsepower > 0, "horsepower", "horsepower must be positive and higher than 0")
 	v.Check(validator.PermittedValue(car.Fuel, fuelOptions...), "fuel", fmt.Sprintf("fuel must be one of: %+v", fuelOptions))
 	v.Check(car.PriceNew.GreaterThan(decimal.NewFromFloat(0)), "price_new", "price_new must be a positive number higher than 0")
 }

@@ -34,8 +34,8 @@ func newTestApplication(t *testing.T, cfg *config, models *data.Models) *applica
 	}
 }
 
-func createTestRequestWithIdParam(t *testing.T, requestMethod, route string, id int) *http.Request {
-	req := httptest.NewRequest(requestMethod, fmt.Sprintf("%s/%d", route, id), nil)
+func createTestRequestWithIdParam(t *testing.T, requestMethod, route string, id int, body io.Reader) *http.Request {
+	req := httptest.NewRequest(requestMethod, fmt.Sprintf("%s/%d", route, id), body)
 	return req.WithContext(context.WithValue(req.Context(), httprouter.ParamsKey, httprouter.Params{
 		{Key: "id", Value: fmt.Sprintf("%d", id)},
 	}))
@@ -46,8 +46,19 @@ type MockCarModel struct {
 }
 
 func (m *MockCarModel) Update(car *data.Car) error {
-	//TODO implement me
-	panic("implement me")
+	for i, c := range m.cars {
+		if car.ID == c.ID {
+			if car.Version != c.Version {
+				return data.ErrEditConflict
+			}
+
+			car.Version++
+			m.cars[i] = *car
+			return nil
+		}
+	}
+
+	return data.ErrRecordNotFound
 }
 
 func (m *MockCarModel) Insert(car *data.Car) error {
@@ -57,9 +68,12 @@ func (m *MockCarModel) Insert(car *data.Car) error {
 }
 
 func (m *MockCarModel) Get(ID int64) (*data.Car, error) {
-	if ID == 1 {
-		return &data.Car{ID: 1}, nil
+	for _, car := range m.cars {
+		if ID == car.ID {
+			return &car, nil
+		}
 	}
+
 	return nil, data.ErrRecordNotFound
 }
 

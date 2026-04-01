@@ -95,19 +95,6 @@ func (app *application) updateCarHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	var input struct {
-		Make        *string          `json:"make"`
-		Model       *string          `json:"model"`
-		Year        *int             `json:"year"`
-		Description *string          `json:"description"`
-		ImageURL    *string          `json:"image_url"`
-		Gearbox     *string          `json:"gearbox"`
-		Drivetrain  *string          `json:"drivetrain"`
-		Horsepower  *int             `json:"horsepower"`
-		Fuel        *string          `json:"fuel"`
-		PriceNew    *decimal.Decimal `json:"price_new"`
-	}
-
 	car, err := app.models.Cars.Get(id)
 	if err != nil {
 		switch {
@@ -125,6 +112,19 @@ func (app *application) updateCarHandler(w http.ResponseWriter, r *http.Request)
 			app.editConflictResponse(w, r)
 			return
 		}
+	}
+
+	var input struct {
+		Make        *string          `json:"make"`
+		Model       *string          `json:"model"`
+		Year        *int             `json:"year"`
+		Description *string          `json:"description"`
+		ImageURL    *string          `json:"image_url"`
+		Gearbox     *string          `json:"gearbox"`
+		Drivetrain  *string          `json:"drivetrain"`
+		Horsepower  *int             `json:"horsepower"`
+		Fuel        *string          `json:"fuel"`
+		PriceNew    *decimal.Decimal `json:"price_new"`
 	}
 
 	err = app.readJSON(w, r, &input)
