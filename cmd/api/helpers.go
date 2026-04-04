@@ -4,11 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"gearboxd/internal/validator"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/shopspring/decimal"
 )
 
 type envelope map[string]any
@@ -92,4 +95,40 @@ func (app *application) readIdParam(r *http.Request) (int64, error) {
 	}
 
 	return id, nil
+}
+
+func (app *application) readQueryString(qs url.Values, key string, defaultValue string) string {
+	if value := qs.Get(key); value != "" {
+		return value
+	}
+
+	return defaultValue
+}
+
+func (app *application) readQueryInt(qs url.Values, key string, defaultValue int, v *validator.Validator) int {
+	s := qs.Get(key)
+	if s == "" {
+		return defaultValue
+	}
+
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		v.AddErrorKey(key, "must be an integer value")
+	}
+
+	return i
+}
+
+func (app *application) readQueryDecimal(qs url.Values, key string, defaultValue decimal.Decimal, v *validator.Validator) decimal.Decimal {
+	s := qs.Get(key)
+	if s == "" {
+		return defaultValue
+	}
+
+	d, err := decimal.NewFromString(s)
+	if err != nil {
+		v.AddErrorKey(key, "must be a decimal value")
+	}
+
+	return d
 }

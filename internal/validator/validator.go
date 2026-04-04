@@ -14,7 +14,7 @@ func (v *Validator) Valid() bool {
 	return len(v.Errors) == 0
 }
 
-func (v *Validator) addErrorKey(key, message string) {
+func (v *Validator) AddErrorKey(key, message string) {
 	if _, exists := v.Errors[key]; !exists {
 		v.Errors[key] = message
 	}

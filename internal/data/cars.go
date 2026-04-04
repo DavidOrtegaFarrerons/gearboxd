@@ -49,6 +49,19 @@ func ValidateCar(v *validator.Validator, car *Car) {
 	v.Check(car.PriceNew.GreaterThan(decimal.NewFromFloat(0)), "price_new", "price_new must be a positive number higher than 0")
 }
 
+type CarFilters struct {
+	Make          string
+	Year          int
+	Gearbox       string
+	Drivetrain    string
+	Fuel          string
+	HorsepowerMin int
+	HorsepowerMax int
+	PriceMin      decimal.Decimal
+	PriceMax      decimal.Decimal
+	Filters
+}
+
 type CarModelInterface interface {
 	Insert(car *Car) error
 	Get(id int64) (*Car, error)
@@ -183,4 +196,7 @@ func (m *CarModel) Delete(id int64) error {
 	}
 
 	return nil
+}
+
+func (m *CarModel) GetAll(carFilters *CarFilters) ([]Car, error) {
 }
