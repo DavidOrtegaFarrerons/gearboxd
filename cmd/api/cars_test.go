@@ -346,3 +346,61 @@ func TestUpdateCarHandler(t *testing.T) {
 		})
 	}
 }
+
+func TestListCarHandler(t *testing.T) {
+	tests := []struct {
+		name         string
+		ID           int
+		expectedCode int
+	}{
+		{
+			name:         "Returns a car",
+			ID:           1,
+			expectedCode: http.StatusOK,
+		},
+		{
+			name:         "Returns 404 not found",
+			ID:           2,
+			expectedCode: http.StatusNotFound,
+		},
+		{
+			name:         "Invalid ID",
+			ID:           0,
+			expectedCode: http.StatusNotFound,
+		},
+	}
+
+	cars := []data.Car{
+		{
+			ID:          1,
+			Make:        "BMW",
+			Model:       "M3 Competition",
+			Year:        2022,
+			Description: "High-performance sports sedan with twin-turbo inline-6 engine",
+			ImageURL:    "https://images.unsplash.com/photo-1619767886558-efdc259cde1a",
+			Gearbox:     "automatic",
+			Drivetrain:  "RWD",
+			Horsepower:  510,
+			Fuel:        "gas",
+			PriceNew:    decimal.NewFromInt(85000),
+			Version:     1,
+		},
+	}
+
+	models := &data.Models{
+		Cars: &MockCarModel{cars: cars},
+	}
+
+	app := newTestApplication(t, nil, models)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rr := httptest.NewRecorder()
+
+			req := createTestRequestWithIdParam(t, http.MethodGet, "/v1/cars", tt.ID, nil)
+			app.getCarHandler(rr, req)
+
+			assert.Equal(t, rr.Code, tt.expectedCode)
+		})
+	}
+}

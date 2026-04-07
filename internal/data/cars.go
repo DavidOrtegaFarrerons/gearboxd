@@ -68,7 +68,7 @@ type CarModelInterface interface {
 	Get(id int64) (*Car, error)
 	Delete(id int64) error
 	Update(car *Car) error
-	GetAll(carFilters *CarFilters) ([]*Car, error)
+	GetAll(carFilters *CarFilters) ([]*Car, Metadata, error)
 }
 type CarModel struct {
 	DB *sql.DB
@@ -200,9 +200,9 @@ func (m *CarModel) Delete(id int64) error {
 	return nil
 }
 
-func (m *CarModel) GetAll(carFilters *CarFilters) ([]*Car, error) {
+func (m *CarModel) GetAll(carFilters *CarFilters) ([]*Car, Metadata, error) {
 	query := fmt.Sprintf(`
-	SELECT id, make, model, year, description, image_url, gearbox, drivetrain, horsepower, fuel, price_new, version
+	SELECT COUNT(*) OVER(), id, make, model, year, description, image_url, gearbox, drivetrain, horsepower, fuel, price_new, version
 	FROM cars
 	WHERE
 	  (make = $1 OR $1 = '')
@@ -239,17 +239,19 @@ func (m *CarModel) GetAll(carFilters *CarFilters) ([]*Car, error) {
 
 	rows, err := m.DB.QueryContext(ctx, query, args...)
 	if err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
 
 	defer rows.Close()
 
+	totalRecords := 0
 	cars := []*Car{}
 
 	for rows.Next() {
 		var car Car
 
 		err = rows.Scan(
+			&totalRecords,
 			&car.ID,
 			&car.Make,
 			&car.Model,
@@ -265,15 +267,17 @@ func (m *CarModel) GetAll(carFilters *CarFilters) ([]*Car, error) {
 		)
 
 		if err != nil {
-			return nil, err
+			return nil, Metadata{}, err
 		}
 
 		cars = append(cars, &car)
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
 
-	return cars, nil
+	metadata := calculateMetadata(totalRecords, carFilters.Page, carFilters.PageSize)
+
+	return cars, metadata, nil
 }

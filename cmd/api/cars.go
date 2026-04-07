@@ -242,13 +242,13 @@ func (app *application) listCarsHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	cars, err := app.models.Cars.GetAll(&cf)
+	cars, metadata, err := app.models.Cars.GetAll(&cf)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"cars": cars}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"cars": cars, "metadata": metadata}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

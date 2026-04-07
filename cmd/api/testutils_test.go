@@ -88,6 +88,6 @@ func (m *MockCarModel) Delete(id int64) error {
 	return data.ErrRecordNotFound
 }
 
-func (m *MockCarModel) GetAll(carFilters *data.CarFilters) ([]*data.Car, error) {
+func (m *MockCarModel) GetAll(carFilters *data.CarFilters) ([]*data.Car, data.Metadata, error) {
 	panic("Implement")
 }
