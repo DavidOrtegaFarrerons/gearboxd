@@ -448,9 +448,6 @@ func TestListCarsHandler(t *testing.T) {
 					Metadata data.Metadata `json:"metadata"`
 				}
 
-				resp := httptest.NewRecorder()
-				resp.Body = rr.Body
-
 				err := json.NewDecoder(rr.Body).Decode(&body)
 				if err != nil {
 					t.Fatalf("failed to decode JSON: %v", err)
