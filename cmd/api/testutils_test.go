@@ -88,6 +88,74 @@ func (m *MockCarModel) Delete(id int64) error {
 	return data.ErrRecordNotFound
 }
 
-func (m *MockCarModel) GetAll(carFilters *data.CarFilters) ([]*data.Car, data.Metadata, error) {
-	panic("Implement")
+func (m *MockCarModel) GetAll(cf *data.CarFilters) ([]*data.Car, data.Metadata, error) {
+	var filtered []*data.Car
+
+	for i := range m.cars {
+		car := m.cars[i]
+
+		if cf.Make != "" && car.Make != cf.Make {
+			continue
+		}
+
+		if cf.Model != "" && car.Model != cf.Model {
+			continue
+		}
+
+		if cf.Year != 0 && car.Year != cf.Year {
+			continue
+		}
+
+		if cf.Gearbox != "" && car.Gearbox != cf.Gearbox {
+			continue
+		}
+
+		if cf.Drivetrain != "" && car.Drivetrain != cf.Drivetrain {
+			continue
+		}
+
+		if cf.Fuel != "" && car.Fuel != cf.Fuel {
+			continue
+		}
+
+		if cf.HorsepowerMin != 0 && car.Horsepower < cf.HorsepowerMin {
+			continue
+		}
+
+		if cf.HorsepowerMax != 0 && car.Horsepower > cf.HorsepowerMax {
+			continue
+		}
+
+		if !cf.PriceMin.IsZero() && car.PriceNew.LessThan(cf.PriceMin) {
+			continue
+		}
+
+		if !cf.PriceMax.IsZero() && car.PriceNew.GreaterThan(cf.PriceMax) {
+			continue
+		}
+
+		filtered = append(filtered, &car)
+	}
+
+	total := len(filtered)
+
+	start := (cf.Filters.Page - 1) * cf.Filters.PageSize
+	end := start + cf.Filters.PageSize
+
+	if start > total {
+		filtered = []*data.Car{}
+	} else {
+		if end > total {
+			end = total
+		}
+		filtered = filtered[start:end]
+	}
+
+	metadata := data.Metadata{
+		CurrentPage:  cf.Filters.Page,
+		PageSize:     cf.Filters.PageSize,
+		TotalRecords: total,
+	}
+
+	return filtered, metadata, nil
 }

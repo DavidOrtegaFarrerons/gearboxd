@@ -347,44 +347,11 @@ func TestUpdateCarHandler(t *testing.T) {
 	}
 }
 
-func TestListCarHandler(t *testing.T) {
-	tests := []struct {
-		name         string
-		ID           int
-		expectedCode int
-	}{
-		{
-			name:         "Returns a car",
-			ID:           1,
-			expectedCode: http.StatusOK,
-		},
-		{
-			name:         "Returns 404 not found",
-			ID:           2,
-			expectedCode: http.StatusNotFound,
-		},
-		{
-			name:         "Invalid ID",
-			ID:           0,
-			expectedCode: http.StatusNotFound,
-		},
-	}
-
+func TestListCarsHandler(t *testing.T) {
 	cars := []data.Car{
-		{
-			ID:          1,
-			Make:        "BMW",
-			Model:       "M3 Competition",
-			Year:        2022,
-			Description: "High-performance sports sedan with twin-turbo inline-6 engine",
-			ImageURL:    "https://images.unsplash.com/photo-1619767886558-efdc259cde1a",
-			Gearbox:     "automatic",
-			Drivetrain:  "RWD",
-			Horsepower:  510,
-			Fuel:        "gas",
-			PriceNew:    decimal.NewFromInt(85000),
-			Version:     1,
-		},
+		{ID: 1, Make: "BMW", Model: "M3", Year: 2020, Gearbox: "automatic", Drivetrain: "RWD", Horsepower: 480, Fuel: "gas", PriceNew: decimal.NewFromInt(50000)},
+		{ID: 2, Make: "Audi", Model: "RS5", Year: 2021, Gearbox: "automatic", Drivetrain: "AWD", Horsepower: 450, Fuel: "gas", PriceNew: decimal.NewFromInt(60000)},
+		{ID: 3, Make: "Volvo", Model: "XC60", Year: 2023, Gearbox: "automatic", Drivetrain: "AWD", Horsepower: 250, Fuel: "hybrid", PriceNew: decimal.NewFromInt(52000)},
 	}
 
 	models := &data.Models{
@@ -393,14 +360,108 @@ func TestListCarHandler(t *testing.T) {
 
 	app := newTestApplication(t, nil, models)
 
+	tests := []struct {
+		name         string
+		query        string
+		expectedCode int
+		expectedLen  int
+		assertFn     func(t *testing.T, cars []data.Car)
+	}{
+		{
+			name:         "Returns all cars",
+			query:        "/v1/cars",
+			expectedCode: http.StatusOK,
+			expectedLen:  3,
+		},
+		{
+			name:         "Filter by make",
+			query:        "/v1/cars?make=BMW",
+			expectedCode: http.StatusOK,
+			expectedLen:  1,
+			assertFn: func(t *testing.T, cars []data.Car) {
+				assert.Equal(t, cars[0].Make, "BMW")
+			},
+		},
+		{
+			name:         "Filter by model",
+			query:        "/v1/cars?model=XC60",
+			expectedCode: http.StatusOK,
+			expectedLen:  1,
+			assertFn: func(t *testing.T, cars []data.Car) {
+				assert.Equal(t, cars[0].Model, "XC60")
+			},
+		},
+		{
+			name:         "Filter by drivetrain",
+			query:        "/v1/cars?drivetrain=AWD",
+			expectedCode: http.StatusOK,
+			expectedLen:  2,
+		},
+		{
+			name:         "Filter by horsepower range",
+			query:        "/v1/cars?horsepower_min=400",
+			expectedCode: http.StatusOK,
+			expectedLen:  2,
+		},
+		{
+			name:         "Filter by price range",
+			query:        "/v1/cars?price_max=55000",
+			expectedCode: http.StatusOK,
+			expectedLen:  2,
+		},
+		{
+			name:         "No results",
+			query:        "/v1/cars?make=Tesla",
+			expectedCode: http.StatusOK,
+			expectedLen:  0,
+		},
+		{
+			name:         "Pagination works",
+			query:        "/v1/cars?page=1&page_size=2",
+			expectedCode: http.StatusOK,
+			expectedLen:  2,
+		},
+		{
+			name:         "Invalid page",
+			query:        "/v1/cars?page=-1",
+			expectedCode: http.StatusUnprocessableEntity,
+		},
+		{
+			name:         "Invalid sort field",
+			query:        "/v1/cars?sort=invalid",
+			expectedCode: http.StatusUnprocessableEntity,
+		},
+	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodGet, tt.query, nil)
 
-			req := createTestRequestWithIdParam(t, http.MethodGet, "/v1/cars", tt.ID, nil)
-			app.getCarHandler(rr, req)
+			app.listCarsHandler(rr, req)
 
 			assert.Equal(t, rr.Code, tt.expectedCode)
+
+			if tt.expectedCode == http.StatusOK {
+				var body struct {
+					Cars     []data.Car    `json:"cars"`
+					Metadata data.Metadata `json:"metadata"`
+				}
+
+				resp := httptest.NewRecorder()
+				resp.Body = rr.Body
+
+				err := json.NewDecoder(rr.Body).Decode(&body)
+				if err != nil {
+					t.Fatalf("failed to decode JSON: %v", err)
+				}
+
+				assert.Equal(t, len(body.Cars), tt.expectedLen)
+
+				if tt.assertFn != nil && len(body.Cars) > 0 {
+					tt.assertFn(t, body.Cars)
+				}
+			}
 		})
 	}
 }
