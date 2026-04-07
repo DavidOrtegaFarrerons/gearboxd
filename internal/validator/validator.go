@@ -22,7 +22,7 @@ func (v *Validator) AddErrorKey(key, message string) {
 
 func (v *Validator) Check(ok bool, key, message string) {
 	if !ok {
-		v.addErrorKey(key, message)
+		v.AddErrorKey(key, message)
 	}
 }
 

@@ -51,6 +51,7 @@ func ValidateCar(v *validator.Validator, car *Car) {
 
 type CarFilters struct {
 	Make          string
+	Model         string
 	Year          int
 	Gearbox       string
 	Drivetrain    string
@@ -67,6 +68,7 @@ type CarModelInterface interface {
 	Get(id int64) (*Car, error)
 	Delete(id int64) error
 	Update(car *Car) error
+	GetAll(carFilters *CarFilters) ([]*Car, error)
 }
 type CarModel struct {
 	DB *sql.DB
@@ -198,5 +200,80 @@ func (m *CarModel) Delete(id int64) error {
 	return nil
 }
 
-func (m *CarModel) GetAll(carFilters *CarFilters) ([]Car, error) {
+func (m *CarModel) GetAll(carFilters *CarFilters) ([]*Car, error) {
+	query := fmt.Sprintf(`
+	SELECT id, make, model, year, description, image_url, gearbox, drivetrain, horsepower, fuel, price_new, version
+	FROM cars
+	WHERE
+	  (make = $1 OR $1 = '')
+	  AND (model ILIKE '%%' || $2 || '%%' OR $2 = '')
+	  AND (year = $3 OR $3 = 0)
+	  AND (gearbox = $4 OR $4 = '')
+	  AND (drivetrain = $5 OR $5 = '')
+	  AND (fuel = $6 OR $6 = '')
+	  AND (horsepower >= $7 OR $7 = 0)
+	  AND (horsepower <= $8 OR $8 = 0)
+	  AND (price_new >= $9 OR $9 = 0)
+	  AND (price_new <= $10 OR $10 = 0)
+	ORDER BY %s %s, id ASC
+	LIMIT $11 OFFSET $12
+`, carFilters.sortColumn(), carFilters.sortDirection())
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	args := []any{
+		carFilters.Make,
+		carFilters.Model,
+		carFilters.Year,
+		carFilters.Gearbox,
+		carFilters.Drivetrain,
+		carFilters.Fuel,
+		carFilters.HorsepowerMin,
+		carFilters.HorsepowerMax,
+		carFilters.PriceMin,
+		carFilters.PriceMax,
+		carFilters.Filters.limit(),
+		carFilters.Filters.offset(),
+	}
+
+	rows, err := m.DB.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	cars := []*Car{}
+
+	for rows.Next() {
+		var car Car
+
+		err = rows.Scan(
+			&car.ID,
+			&car.Make,
+			&car.Model,
+			&car.Year,
+			&car.Description,
+			&car.ImageURL,
+			&car.Gearbox,
+			&car.Drivetrain,
+			&car.Horsepower,
+			&car.Fuel,
+			&car.PriceNew,
+			&car.Version,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		cars = append(cars, &car)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return cars, nil
 }

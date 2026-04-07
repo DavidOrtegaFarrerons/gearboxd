@@ -216,31 +216,40 @@ func (app *application) deleteCarHandler(w http.ResponseWriter, r *http.Request)
 func (app *application) listCarsHandler(w http.ResponseWriter, r *http.Request) {
 	//Filter by: make, year, gearbox, drivetrain, fuel horsepower_min / horsepower_max price_min / price_max
 	//Sort by: make, year, horsepower, price
-	var input data.CarFilters
+	var cf data.CarFilters
 
 	qs := r.URL.Query()
 	v := validator.New()
 
-	input.Make = app.readQueryString(qs, "make", "")
-	input.Year = app.readQueryInt(qs, "year", 0, v)
-	input.Gearbox = app.readQueryString(qs, "gearbox", "")
-	input.Drivetrain = app.readQueryString(qs, "drivetrain", "")
-	input.Fuel = app.readQueryString(qs, "fuel", "")
-	input.HorsepowerMin = app.readQueryInt(qs, "horsepower_min", 0, v)
-	input.HorsepowerMax = app.readQueryInt(qs, "horsepower_max", 0, v)
-	input.PriceMin = app.readQueryDecimal(qs, "price_min", decimal.Zero, v)
-	input.PriceMax = app.readQueryDecimal(qs, "price_max", decimal.Zero, v)
+	cf.Make = app.readQueryString(qs, "make", "")
+	cf.Model = app.readQueryString(qs, "model", "")
+	cf.Year = app.readQueryInt(qs, "year", 0, v)
+	cf.Gearbox = app.readQueryString(qs, "gearbox", "")
+	cf.Drivetrain = app.readQueryString(qs, "drivetrain", "")
+	cf.Fuel = app.readQueryString(qs, "fuel", "")
+	cf.HorsepowerMin = app.readQueryInt(qs, "horsepower_min", 0, v)
+	cf.HorsepowerMax = app.readQueryInt(qs, "horsepower_max", 0, v)
+	cf.PriceMin = app.readQueryDecimal(qs, "price_min", decimal.Zero, v)
+	cf.PriceMax = app.readQueryDecimal(qs, "price_max", decimal.Zero, v)
 
-	input.Filters.Page = app.readQueryInt(qs, "page", 1, v)
-	input.Filters.PageSize = app.readQueryInt(qs, "page_size", 20, v)
-	input.Filters.Sort = app.readQueryString(qs, "sort", "make")
-	input.Filters.SortSafelist = []string{"make", "-make", "year", "-year", "horsepower", "-horsepower", "price", "-price"}
+	cf.Filters.Page = app.readQueryInt(qs, "page", 1, v)
+	cf.Filters.PageSize = app.readQueryInt(qs, "page_size", 20, v)
+	cf.Filters.Sort = app.readQueryString(qs, "sort", "make")
+	cf.Filters.SortSafelist = []string{"make", "-make", "year", "-year", "horsepower", "-horsepower", "price", "-price"}
 
-	if data.ValidateFilters(v, input.Filters); !v.Valid() {
+	if data.ValidateFilters(v, cf.Filters); !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 
-	movies, metadata :=
+	cars, err := app.models.Cars.GetAll(&cf)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
 
+	err = app.writeJSON(w, http.StatusOK, envelope{"cars": cars}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
 }

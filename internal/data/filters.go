@@ -1,6 +1,9 @@
 package data
 
-import "gearboxd/internal/validator"
+import (
+	"gearboxd/internal/validator"
+	"strings"
+)
 
 type Filters struct {
 	Page         int
@@ -11,9 +14,35 @@ type Filters struct {
 
 func ValidateFilters(v *validator.Validator, f Filters) {
 	v.Check(f.Page > 0, "page", "must be greather than 0")
-	v.Check(f.Page > 1_000_000, "page", "must be a maximum of 1 million")
+	v.Check(f.Page < 1_000_000, "page", "must be a maximum of 1 million")
 	v.Check(f.PageSize > 0, "page_size", "must be greather than 0")
-	v.Check(f.PageSize > 1_000_000, "page_size", "must be a maximum of 1 million")
+	v.Check(f.PageSize < 1_000_000, "page_size", "must be a maximum of 1 million")
 
 	v.Check(validator.PermittedValue(f.Sort, f.SortSafelist...), "sort", "invalid sort value")
+}
+
+func (f Filters) sortColumn() string {
+	for _, safeValue := range f.SortSafelist {
+		if f.Sort == safeValue {
+			return strings.TrimPrefix(f.Sort, "-")
+		}
+	}
+
+	panic("sort value is not in the safelist")
+}
+
+func (f Filters) sortDirection() string {
+	if strings.HasPrefix(f.Sort, "-") {
+		return "DESC"
+	}
+
+	return "ASC"
+}
+
+func (f Filters) limit() int {
+	return f.PageSize
+}
+
+func (f Filters) offset() int {
+	return (f.Page - 1) * f.PageSize
 }

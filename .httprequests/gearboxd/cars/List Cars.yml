@@ -1,0 +1,57 @@
+info:
+  name: List Cars
+  type: http
+  seq: 5
+
+http:
+  method: GET
+  url: "{{domain}}/v1/cars?make=&model=&year=&gearbox=&drivetrain=&fuel=&horsepower_min=&horsepower_max=&price_min=&price_max=&page=1&page_size=5"
+  params:
+    - name: make
+      value: ""
+      type: query
+    - name: model
+      value: ""
+      type: query
+    - name: year
+      value: ""
+      type: query
+    - name: gearbox
+      value: ""
+      type: query
+    - name: drivetrain
+      value: ""
+      type: query
+    - name: fuel
+      value: ""
+      type: query
+    - name: horsepower_min
+      value: ""
+      type: query
+    - name: horsepower_max
+      value: ""
+      type: query
+    - name: price_min
+      value: ""
+      type: query
+    - name: price_max
+      value: ""
+      type: query
+    - name: page
+      value: "1"
+      type: query
+    - name: page_size
+      value: "5"
+      type: query
+  auth: inherit
+
+runtime:
+  variables:
+    - name: domain
+      value: http://localhost:4000
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
