@@ -36,6 +36,10 @@ func main() {
 	defer db.Close()
 
 	files, err := seedFiles.ReadDir("seeds")
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
 
 	for _, f := range files {
 		if f.IsDir() {
