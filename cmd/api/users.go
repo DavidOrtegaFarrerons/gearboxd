@@ -45,13 +45,14 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		case errors.Is(err, data.ErrDuplicateUsername):
 			v.AddErrorKey("username", "already exists")
 			app.failedValidationResponse(w, r, v.Errors)
-			return
 		case errors.Is(err, data.ErrDuplicateEmail):
 			v.AddErrorKey("email", "already exists")
 			app.failedValidationResponse(w, r, v.Errors)
 		default:
 			app.serverErrorResponse(w, r, err)
 		}
+
+		return
 	}
 
 	err = app.writeJSON(w, http.StatusCreated, envelope{"user": user}, nil)

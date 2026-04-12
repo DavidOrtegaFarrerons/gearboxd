@@ -207,7 +207,7 @@ func TestValidateUser(t *testing.T) {
 				Username: tt.username,
 				Email:    tt.email,
 			}
-			user.Password.plaintext = new(tt.password)
+			user.Password.plaintext = &tt.password
 
 			v := validator.New()
 
