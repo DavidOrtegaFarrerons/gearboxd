@@ -16,5 +16,8 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/v1/cars/:id", app.getCarHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/cars", app.listCarsHandler)
 	router.HandlerFunc(http.MethodDelete, "/v1/cars/:id", app.deleteCarHandler)
+
+	router.HandlerFunc(http.MethodPost, "/v1/users", app.registerUserHandler)
+
 	return router
 }

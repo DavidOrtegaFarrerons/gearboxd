@@ -5,43 +5,46 @@ info:
 
 http:
   method: GET
-  url: "{{domain}}/v1/cars?make=&model=&year=&gearbox=&drivetrain=&fuel=&horsepower_min=&horsepower_max=&price_min=&price_max=&page=1&page_size=5"
+  url: "{{domain}}/v1/cars?make=Volvo&model=XC60&year=2023&gearbox=automatic&drivetrain=AWD&fuel=hybrid&horsepower_min=100&horsepower_max=300&price_min=30000&price_max=55000&page=1&page_size=5&sort=make"
   params:
     - name: make
-      value: ""
+      value: Volvo
       type: query
     - name: model
-      value: ""
+      value: XC60
       type: query
     - name: year
-      value: ""
+      value: "2023"
       type: query
     - name: gearbox
-      value: ""
+      value: automatic
       type: query
     - name: drivetrain
-      value: ""
+      value: AWD
       type: query
     - name: fuel
-      value: ""
+      value: hybrid
       type: query
     - name: horsepower_min
-      value: ""
+      value: "100"
       type: query
     - name: horsepower_max
-      value: ""
+      value: "300"
       type: query
     - name: price_min
-      value: ""
+      value: "30000"
       type: query
     - name: price_max
-      value: ""
+      value: "55000"
       type: query
     - name: page
       value: "1"
       type: query
     - name: page_size
       value: "5"
+      type: query
+    - name: sort
+      value: make
       type: query
   auth: inherit
 

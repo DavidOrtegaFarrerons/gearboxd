@@ -11,11 +11,13 @@ var (
 )
 
 type Models struct {
-	Cars CarModelInterface
+	Cars  CarModelInterface
+	Users UserModelInterface
 }
 
 func NewModels(db *sql.DB) Models {
 	return Models{
-		Cars: &CarModel{DB: db},
+		Cars:  &CarModel{DB: db},
+		Users: &UserModel{DB: db},
 	}
 }
