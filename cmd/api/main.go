@@ -6,8 +6,11 @@ import (
 	"errors"
 	"flag"
 	"gearboxd/internal/data"
+	"gearboxd/internal/mailer"
+	"log"
 	"log/slog"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -25,11 +28,19 @@ type config struct {
 		maxIdleConns int
 		maxIdleTime  time.Duration
 	}
+	smtp struct {
+		host     string
+		port     int
+		username string
+		password string
+		sender   string
+	}
 }
 type application struct {
 	config config
 	logger *slog.Logger
 	models data.Models
+	mailer mailer.Mailer
 }
 
 func main() {
@@ -41,6 +52,23 @@ func main() {
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
 	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
 	flag.DurationVar(&cfg.db.maxIdleTime, "db-max-idle-time", 15*time.Minute, "PostgreSQL max connection idle time")
+
+	flag.StringVar(&cfg.smtp.host, "smtp-host", os.Getenv("SMTP_HOST"), "SMTP host")
+
+	smtpPort := 25
+	if v := os.Getenv("SMTP_PORT"); v != "" {
+		port, err := strconv.Atoi(v)
+		if err != nil {
+			log.Fatalf("invalid SMTP_PORT: %v", err)
+		}
+
+		smtpPort = port
+	}
+
+	flag.IntVar(&cfg.smtp.port, "smtp-port", smtpPort, "SMTP port")
+	flag.StringVar(&cfg.smtp.username, "smtp-username", os.Getenv("SMTP_USERNAME"), "SMTP username")
+	flag.StringVar(&cfg.smtp.password, "smtp-password", os.Getenv("SMTP_PASSWORD"), "SMTP password")
+	flag.StringVar(&cfg.smtp.sender, "smtp-sender", os.Getenv("SMTP_SENDER"), "SMTP sender")
 
 	flag.Parse()
 
@@ -82,6 +110,7 @@ func main() {
 		config: cfg,
 		logger: logger,
 		models: models,
+		mailer: mailer.New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender),
 	}
 
 	err = app.serve()
