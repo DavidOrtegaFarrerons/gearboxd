@@ -49,7 +49,7 @@ func ValidateTokenPlaintext(v *validator.Validator, tokenPlaintext string) {
 	v.Check(len(tokenPlaintext) == 26, "token", "must be 26 bytes long")
 }
 
-type TokenModelInterface interface {
+type PostgresTokenStore interface {
 	New(userID int64, ttl time.Duration, scope string) (*Token, error)
 	Insert(token *Token) error
 	DeleteAllForUser(scope string, userID int64) error

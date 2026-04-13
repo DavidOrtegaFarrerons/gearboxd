@@ -63,18 +63,18 @@ type CarFilters struct {
 	Filters
 }
 
-type CarModelInterface interface {
+type CarStore interface {
 	Insert(car *Car) error
 	Get(id int64) (*Car, error)
 	Delete(id int64) error
 	Update(car *Car) error
 	GetAll(carFilters *CarFilters) ([]*Car, Metadata, error)
 }
-type CarModel struct {
+type PostgresCarStore struct {
 	DB *sql.DB
 }
 
-func (m *CarModel) Insert(car *Car) error {
+func (m *PostgresCarStore) Insert(car *Car) error {
 	query := `INSERT INTO cars (
 	  make, model, year, description, image_url, gearbox, drivetrain, horsepower, fuel, price_new
 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
@@ -100,7 +100,7 @@ RETURNING id, created_at, version
 	return m.DB.QueryRowContext(ctx, query, args...).Scan(&car.ID, &car.CreatedAt, &car.Version)
 }
 
-func (m *CarModel) Get(id int64) (*Car, error) {
+func (m *PostgresCarStore) Get(id int64) (*Car, error) {
 	query := `SELECT id, make, model, year, description, image_url, gearbox, drivetrain, horsepower, fuel, price_new, version
 	FROM cars
 	WHERE id = $1`
@@ -136,7 +136,7 @@ func (m *CarModel) Get(id int64) (*Car, error) {
 	return &car, nil
 }
 
-func (m *CarModel) Update(car *Car) error {
+func (m *PostgresCarStore) Update(car *Car) error {
 	query := `UPDATE cars 
 	SET make = $1, model = $2, year = $3, description = $4, image_url = $5, gearbox = $6, drivetrain = $7, horsepower = $8, fuel = $9, price_new = $10, version = version + 1
 	WHERE id = $11 AND version = $12
@@ -173,7 +173,7 @@ func (m *CarModel) Update(car *Car) error {
 	return nil
 }
 
-func (m *CarModel) Delete(id int64) error {
+func (m *PostgresCarStore) Delete(id int64) error {
 	if id < 1 {
 		return ErrRecordNotFound
 	}
@@ -200,7 +200,7 @@ func (m *CarModel) Delete(id int64) error {
 	return nil
 }
 
-func (m *CarModel) GetAll(carFilters *CarFilters) ([]*Car, Metadata, error) {
+func (m *PostgresCarStore) GetAll(carFilters *CarFilters) ([]*Car, Metadata, error) {
 	query := fmt.Sprintf(`
 	SELECT COUNT(*) OVER(), id, make, model, year, description, image_url, gearbox, drivetrain, horsepower, fuel, price_new, version
 	FROM cars

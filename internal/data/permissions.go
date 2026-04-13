@@ -15,15 +15,15 @@ func (p Permissions) Include(code string) bool {
 	return slices.Contains(p, code)
 }
 
-type PermissionModelInterface interface {
+type PermissionStore interface {
 	GetAllForUser(userID int64) (Permissions, error)
 	AddForUser(userID int64, codes ...string) error
 }
-type PermissionModel struct {
+type PostgresPermissionStore struct {
 	DB *sql.DB
 }
 
-func (m PermissionModel) GetAllForUser(userID int64) (Permissions, error) {
+func (m PostgresPermissionStore) GetAllForUser(userID int64) (Permissions, error) {
 	query := `SELECT permissions.code
 	FROM permissions
 	INNER JOIN users_permissions ON users_permissions.permission_id = permission.id
@@ -59,7 +59,7 @@ func (m PermissionModel) GetAllForUser(userID int64) (Permissions, error) {
 	return permissions, nil
 }
 
-func (m PermissionModel) AddForUser(userID int64, codes ...string) error {
+func (m PostgresPermissionStore) AddForUser(userID int64, codes ...string) error {
 	query := `INSERT INTO users_permissions
 	SELECT $1, permissions.id FROM permissions WHERE permissions.code = ANY($2)`
 

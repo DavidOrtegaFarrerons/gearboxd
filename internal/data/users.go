@@ -87,18 +87,18 @@ func ValidateUser(user *User, v *validator.Validator) {
 	ValidatePassword(v, *user.Password.plaintext)
 }
 
-type UserModelInterface interface {
+type UserStore interface {
 	Insert(user *User) error
 	Update(user *User) error
 	GetForToken(scope, tokenPlaintext string) (*User, error)
 	GetByEmail(email string) (*User, error)
 }
 
-type UserModel struct {
+type PostgresUserStore struct {
 	DB *sql.DB
 }
 
-func (m *UserModel) Insert(user *User) error {
+func (m *PostgresUserStore) Insert(user *User) error {
 	query := `INSERT INTO users (email, username, password_hash) 
 	VALUES ($1, $2, $3)
 	RETURNING id, version, created_at`
@@ -121,7 +121,7 @@ func (m *UserModel) Insert(user *User) error {
 	return nil
 }
 
-func (m *UserModel) Update(user *User) error {
+func (m *PostgresUserStore) Update(user *User) error {
 	query := `
 		UPDATE users
 		SET username = $1, email = $2, password_hash = $3, activated = $4, version = version + 1
@@ -155,7 +155,7 @@ func (m *UserModel) Update(user *User) error {
 	return nil
 }
 
-func (m *UserModel) GetForToken(scope, tokenPlaintext string) (*User, error) {
+func (m *PostgresUserStore) GetForToken(scope, tokenPlaintext string) (*User, error) {
 	tokenHash := sha256.Sum256([]byte(tokenPlaintext))
 
 	query := `SELECT users.id, users.created_at, users.username, users.email, users.password_hash, users.activated, users.version
@@ -195,7 +195,7 @@ func (m *UserModel) GetForToken(scope, tokenPlaintext string) (*User, error) {
 	return &user, nil
 }
 
-func (m UserModel) GetByEmail(email string) (*User, error) {
+func (m PostgresUserStore) GetByEmail(email string) (*User, error) {
 	query := `
 		SELECT id, created_at, username, email, password_hash, activated, version
 		FROM users
