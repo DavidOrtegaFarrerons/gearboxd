@@ -1,18 +1,16 @@
 info:
-  name: Register
+  name: Activate
   type: http
-  seq: 1
+  seq: 2
 
 http:
-  method: POST
-  url: "{{domain}}/v1/users"
+  method: PUT
+  url: "{{domain}}/v1/users/activated"
   body:
     type: json
     data: |-
       {
-        "email": "david9@gmail.com",
-        "username": "david9",
-        "password": "12345678"
+        "token": "TJUDFVA3X5ODOPWIQYKNTPZ474"
       }
   auth: inherit
 

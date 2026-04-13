@@ -1,17 +1,16 @@
 info:
-  name: Register
+  name: Get Authentication Token
   type: http
   seq: 1
 
 http:
   method: POST
-  url: "{{domain}}/v1/users"
+  url: "{{domain}}/v1/tokens/authentication"
   body:
     type: json
     data: |-
       {
         "email": "david9@gmail.com",
-        "username": "david9",
         "password": "12345678"
       }
   auth: inherit
