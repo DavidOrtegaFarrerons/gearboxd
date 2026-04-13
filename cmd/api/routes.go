@@ -11,11 +11,11 @@ func (app *application) routes() http.Handler {
 
 	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
 
-	router.HandlerFunc(http.MethodPost, "/v1/cars", app.createCarHandler)
-	router.HandlerFunc(http.MethodPatch, "/v1/cars/:id", app.updateCarHandler)
-	router.HandlerFunc(http.MethodGet, "/v1/cars/:id", app.getCarHandler)
-	router.HandlerFunc(http.MethodGet, "/v1/cars", app.listCarsHandler)
-	router.HandlerFunc(http.MethodDelete, "/v1/cars/:id", app.deleteCarHandler)
+	router.HandlerFunc(http.MethodPost, "/v1/cars", app.requirePermission("cars:write", app.createCarHandler))
+	router.HandlerFunc(http.MethodPatch, "/v1/cars/:id", app.requirePermission("cars:write", app.updateCarHandler))
+	router.HandlerFunc(http.MethodGet, "/v1/cars/:id", app.requirePermission("cars:read", app.getCarHandler))
+	router.HandlerFunc(http.MethodGet, "/v1/cars", app.requirePermission("cars:read", app.listCarsHandler))
+	router.HandlerFunc(http.MethodDelete, "/v1/cars/:id", app.requirePermission("cars:write", app.deleteCarHandler))
 
 	router.HandlerFunc(http.MethodPost, "/v1/users", app.registerUserHandler)
 	router.HandlerFunc(http.MethodPut, "/v1/users/activated", app.activateUserHandler)
