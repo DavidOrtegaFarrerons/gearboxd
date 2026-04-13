@@ -21,7 +21,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 
 		headerParts := strings.Split(authorizationHeader, " ")
 		if len(headerParts) != 2 || headerParts[0] != "Bearer" {
-			app.invalidCredentialsResponse(w, r)
+			app.invalidAuthenticationTokenResponse(w, r)
 			return
 		}
 
@@ -65,10 +65,6 @@ func (app *application) requireAuthenticatedUser(next http.HandlerFunc) http.Han
 func (app *application) requireActivatedUser(next http.HandlerFunc) http.HandlerFunc {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		user := app.contextGetUser(r)
-		if user.IsAnonymous() {
-			app.authenticationRequiredResponse(w, r)
-			return
-		}
 
 		if !user.Activated {
 			app.inactiveAccountResponse(w, r)

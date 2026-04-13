@@ -17,6 +17,7 @@ func (app *application) createAuthenticationTokenHandler(w http.ResponseWriter, 
 	err := app.readJSON(w, r, &input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
+		return
 	}
 
 	v := validator.New()
@@ -24,6 +25,7 @@ func (app *application) createAuthenticationTokenHandler(w http.ResponseWriter, 
 
 	if !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
+		return
 	}
 
 	user, err := app.models.Users.GetByEmail(input.Email)
