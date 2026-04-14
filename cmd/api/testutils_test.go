@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -158,4 +159,58 @@ func (m *MockCarModel) GetAll(cf *data.CarFilters) ([]*data.Car, data.Metadata, 
 	}
 
 	return filtered, metadata, nil
+}
+
+type MockUserStore struct {
+	InsertFunc      func(user *data.User) error
+	UpdateFunc      func(user *data.User) error
+	GetByEmailFunc  func(email string) (*data.User, error)
+	GetForTokenFunc func(scope, tokenPlaintext string) (*data.User, error)
+}
+
+func (m *MockUserStore) Insert(user *data.User) error {
+	return m.InsertFunc(user)
+}
+
+func (m *MockUserStore) Update(user *data.User) error {
+	return m.UpdateFunc(user)
+}
+
+func (m *MockUserStore) GetByEmail(email string) (*data.User, error) {
+	return m.GetByEmailFunc(email)
+}
+
+func (m *MockUserStore) GetForToken(scope, tokenPlaintext string) (*data.User, error) {
+	return m.GetForTokenFunc(scope, tokenPlaintext)
+}
+
+type MockTokenStore struct {
+	NewFunc              func(userID int64, ttl time.Duration, scope string) (*data.Token, error)
+	InsertFunc           func(token *data.Token) error
+	DeleteAllForUserFunc func(scope string, userID int64) error
+}
+
+func (m MockTokenStore) New(userID int64, ttl time.Duration, scope string) (*data.Token, error) {
+	return m.NewFunc(userID, ttl, scope)
+}
+
+func (m MockTokenStore) Insert(token *data.Token) error {
+	return m.InsertFunc(token)
+}
+
+func (m MockTokenStore) DeleteAllForUser(scope string, userID int64) error {
+	return m.DeleteAllForUserFunc(scope, userID)
+}
+
+type MockPermissionStore struct {
+	GetAllForUserFunc func(userID int64) (data.Permissions, error)
+	AddForUserFunc    func(userID int64, codes ...string) error
+}
+
+func (m MockPermissionStore) GetAllForUser(userID int64) (data.Permissions, error) {
+	return m.GetAllForUserFunc(userID)
+}
+
+func (m MockPermissionStore) AddForUser(userID int64, codes ...string) error {
+	return m.AddForUserFunc(userID, codes...)
 }
