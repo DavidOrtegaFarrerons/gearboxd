@@ -214,6 +214,15 @@ func TestRequirePermission(t *testing.T) {
 			requiredPermission: "cars:write",
 			code:               http.StatusUnauthorized,
 		},
+		{
+			name:        "Database error",
+			contextUser: &data.User{ID: 1, Activated: true},
+			getAllForUserFunc: func(userID int64) (data.Permissions, error) {
+				return nil, errors.New("connection refused")
+			},
+			requiredPermission: "cars:write",
+			code:               http.StatusInternalServerError,
+		},
 	}
 
 	for _, tt := range tests {
