@@ -54,7 +54,17 @@ type application struct {
 
 func main() {
 	var cfg config
-	flag.IntVar(&cfg.port, "port", 4000, "Define the port used in the app")
+	serverPort := 4000
+	if v := os.Getenv("SERVER_PORT"); v != "" {
+		sp, err := strconv.Atoi(v)
+		if err != nil {
+			log.Fatalf("invalid SMTP_PORT: %v", err)
+		}
+
+		serverPort = sp
+	}
+
+	flag.IntVar(&cfg.port, "port", serverPort, "Define the port used in the app")
 	flag.StringVar(&cfg.env, "env", "dev", "Define the env used in the app")
 
 	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("GEARBOXD_DB_DSN"), "Define the PostgreSQL DSN")
