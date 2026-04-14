@@ -15,6 +15,7 @@ services:
     command:
       [
         "./api",
+        "-cors-trusted-origins=${CORS_TRUSTED_ORIGINS}",
       ]
     ports:
       - "${SERVER_PORT}:4000"
