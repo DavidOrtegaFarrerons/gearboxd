@@ -2,9 +2,11 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"gearboxd/internal/data"
 	"gearboxd/internal/validator"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -69,9 +71,10 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	app.background(func() {
+		u := fmt.Sprintf("%s/verifyAccount", app.config.frontendDomain)
+		activationLink := fmt.Sprintf("%s?token=%s", u, url.QueryEscape(token.Plaintext))
 		tmplVars := map[string]any{
-			"activationToken": token.Plaintext,
-			"id":              user.ID,
+			"activationLink": activationLink,
 		}
 
 		err = app.mailer.Send(user.Email, "user_welcome.tmpl", tmplVars)

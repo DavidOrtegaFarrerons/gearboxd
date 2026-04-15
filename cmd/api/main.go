@@ -21,9 +21,10 @@ import (
 )
 
 type config struct {
-	port int
-	env  string
-	db   struct {
+	port           int
+	env            string
+	frontendDomain string
+	db             struct {
 		dsn          string
 		maxOpenConns int
 		maxIdleConns int
@@ -66,6 +67,7 @@ func main() {
 
 	flag.IntVar(&cfg.port, "port", serverPort, "Define the port used in the app")
 	flag.StringVar(&cfg.env, "env", "dev", "Define the env used in the app")
+	flag.StringVar(&cfg.frontendDomain, "frontend-domain", os.Getenv("FRONTEND_DOMAIN"), "Define the frontend domain")
 
 	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("GEARBOXD_DB_DSN"), "Define the PostgreSQL DSN")
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
