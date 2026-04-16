@@ -111,7 +111,7 @@ A production-grade REST API built in Go, a Letterboxd-style car discovery platfo
 
 ## Running Locally
 
-**Prerequisites:** Docker
+**Prerequisites:** Docker & Make
 
 ```bash
 # Copy and fill in environment variables

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"embed"
 	"flag"
+	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -55,6 +56,8 @@ func main() {
 			logger.Error(err.Error())
 			os.Exit(1)
 		}
+
+		logger.Info(fmt.Sprintf("Executing seeder from: %s", f.Name()))
 
 		_, err = db.Exec(string(query))
 		if err != nil {
