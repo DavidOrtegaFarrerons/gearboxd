@@ -2,6 +2,12 @@ BEGIN;
 
 TRUNCATE TABLE users, permissions RESTART IDENTITY CASCADE;
 
+INSERT INTO permissions (code)
+VALUES
+    ('cars:read'),
+    ('cars:write');
+
+
 INSERT INTO users (email, username, password_hash, activated, version)
 VALUES (
        'user@gearboxd.com',

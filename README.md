@@ -1,6 +1,7 @@
 > 🚗 **Live API:** [`https://api.gearboxd.davidortegafarrerons.com/v1/healthcheck`](https://api.gearboxd.davidortegafarrerons.com/v1/healthcheck)
 
 > 🏎️ **Live Website:** [`https://gearboxd.davidortegafarrerons.com`](https://gearboxd.davidortegafarrerons.com)
+
 # Gearboxd
 
 A production-grade REST API built in Go, a Letterboxd-style car discovery platform. Users can browse a catalogue of iconic cars, register accounts, authenticate, and interact with the collection. Built as a portfolio project following the patterns in *Let's Go Further* by Alex Edwards.
@@ -38,7 +39,7 @@ A production-grade REST API built in Go, a Letterboxd-style car discovery platfo
 │   │   ├── errors.go         # Centralised error responses
 │   │   └── context.go        # Request context helpers
 │   └── seed/
-│       └── main.go           # Database seeder (30+ cars)
+│       └── main.go           # Database seeder binary
 └── internal/
     ├── data/
     │   ├── models.go         # Models struct (dependency injection)
@@ -123,6 +124,48 @@ make build
 # (Optional) Seed the database (requires the container to be running)
 make seed
 ```
+
+---
+
+## Seed Data
+
+Running `make seed` populates the database using three ordered SQL seed files:
+
+| File | What it seeds |
+|------|--------------|
+| `01_cars.sql` | 10 iconic cars across BMW, Audi, Mercedes, Toyota, and Porsche |
+| `02_users.sql` | Two pre-activated accounts — a regular user and an admin |
+| `03_permissions.sql` | Assigns `cars:read` to the regular user; `cars:read` + `cars:write` to the admin |
+
+The seeder truncates existing data before inserting, so it is safe to re-run. All inserts are wrapped in a transaction — if anything fails, the database is left unchanged.
+
+### Demo accounts
+
+Both accounts are pre-activated and ready to use immediately after seeding.
+
+| Role | Email | Password | Permissions |
+|------|-------|----------|-------------|
+| Member | `user@gearboxd.com` | `password` | `cars:read` |
+| Admin | `admin@gearboxd.com` | `password` | `cars:read`, `cars:write` |
+
+**Getting an auth token:**
+
+```bash
+curl -X POST https://api.gearboxd.davidortegafarrerons.com/v1/tokens/authentication \
+  -H "Content-Type: application/json" \
+  -d '{"email": "admin@gearboxd.com", "password": "password"}'
+```
+
+The response includes a `token` value. Pass it as a Bearer header on subsequent requests:
+
+```bash
+curl -X POST https://api.gearboxd.davidortegafarrerons.com/v1/cars \
+  -H "Authorization: Bearer <your-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"make": "Ferrari", "model": "F40", "year": 1992, ...}'
+```
+
+A regular user (`cars:read` only) attempting a write operation will receive a `403 Forbidden`.
 
 ---
 

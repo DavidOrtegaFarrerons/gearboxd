@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"gearboxd/internal/data"
 	"gearboxd/internal/validator"
 	"net"
@@ -92,6 +93,7 @@ func (app *application) requirePermission(permission string, next http.HandlerFu
 		}
 
 		if !permissions.Include(permission) {
+			app.logger.Error(fmt.Sprintf("Wanted permission: %s, got %+v", permission, permissions))
 			app.notPermittedResponse(w, r)
 			return
 		}
