@@ -83,7 +83,12 @@ func (app *application) getCarHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"car": car}, nil)
+	carLogs, err := app.models.CarLogs.GetAllForCar(id)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"car": car, "car_logs": carLogs}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

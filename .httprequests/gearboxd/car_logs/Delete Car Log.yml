@@ -1,0 +1,23 @@
+info:
+  name: Delete Car Log
+  type: http
+  seq: 2
+
+http:
+  method: DELETE
+  url: "{{domain}}/v1/car_logs"
+  body:
+    type: json
+    data: |-
+      {
+        "car_id": 2
+      }
+  auth:
+    type: bearer
+    token: UNCKG4JJM3UPLKV35LCPRUY4JU
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

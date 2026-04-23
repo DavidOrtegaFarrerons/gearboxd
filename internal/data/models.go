@@ -15,6 +15,7 @@ type Models struct {
 	Users       UserStore
 	Tokens      PostgresTokenStore
 	Permissions PermissionStore
+	CarLogs     CarLogStore
 }
 
 func NewModels(db *sql.DB) Models {
@@ -23,5 +24,6 @@ func NewModels(db *sql.DB) Models {
 		Users:       &PostgresUserStore{DB: db},
 		Tokens:      &TokenModel{DB: db},
 		Permissions: &PostgresPermissionStore{DB: db},
+		CarLogs:     &PostgresCarLogStore{DB: db},
 	}
 }

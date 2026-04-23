@@ -21,7 +21,9 @@ http:
           "fuel": "gas",
           "price_new": 15000.00
       }
-  auth: inherit
+  auth:
+    type: bearer
+    token: KVMNE3FIIR7ESRG2SQA5WX5OCM
 
 settings:
   encodeUrl: true

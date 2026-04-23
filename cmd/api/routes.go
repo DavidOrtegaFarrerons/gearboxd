@@ -20,6 +20,10 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, "/v1/users", app.registerUserHandler)
 	router.HandlerFunc(http.MethodPut, "/v1/users/activated", app.activateUserHandler)
 
+	router.HandlerFunc(http.MethodPost, "/v1/car_logs", app.requireAuthenticatedUser(app.createCarLogHandler))
+	router.HandlerFunc(http.MethodDelete, "/v1/car_logs", app.requireAuthenticatedUser(app.deleteCarLogHandler))
+	router.HandlerFunc(http.MethodPatch, "/v1/car_logs/:id", app.requireAuthenticatedUser(app.updateCarLogHandler))
+
 	router.HandlerFunc(http.MethodPost, "/v1/tokens/authentication", app.createAuthenticationTokenHandler)
 
 	return app.enableCORS(app.rateLimit(app.authenticate(router)))

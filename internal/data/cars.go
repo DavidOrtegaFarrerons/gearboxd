@@ -74,7 +74,7 @@ type PostgresCarStore struct {
 	DB *sql.DB
 }
 
-func (m *PostgresCarStore) Insert(car *Car) error {
+func (s *PostgresCarStore) Insert(car *Car) error {
 	query := `INSERT INTO cars (
 	  make, model, year, description, image_url, gearbox, drivetrain, horsepower, fuel, price_new
 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
@@ -97,10 +97,10 @@ RETURNING id, created_at, version
 		car.PriceNew,
 	}
 
-	return m.DB.QueryRowContext(ctx, query, args...).Scan(&car.ID, &car.CreatedAt, &car.Version)
+	return s.DB.QueryRowContext(ctx, query, args...).Scan(&car.ID, &car.CreatedAt, &car.Version)
 }
 
-func (m *PostgresCarStore) Get(id int64) (*Car, error) {
+func (s *PostgresCarStore) Get(id int64) (*Car, error) {
 	query := `SELECT id, make, model, year, description, image_url, gearbox, drivetrain, horsepower, fuel, price_new, version
 	FROM cars
 	WHERE id = $1`
@@ -109,7 +109,7 @@ func (m *PostgresCarStore) Get(id int64) (*Car, error) {
 	defer cancel()
 
 	var car Car
-	err := m.DB.QueryRowContext(ctx, query, id).Scan(
+	err := s.DB.QueryRowContext(ctx, query, id).Scan(
 		&car.ID,
 		&car.Make,
 		&car.Model,
@@ -136,7 +136,7 @@ func (m *PostgresCarStore) Get(id int64) (*Car, error) {
 	return &car, nil
 }
 
-func (m *PostgresCarStore) Update(car *Car) error {
+func (s *PostgresCarStore) Update(car *Car) error {
 	query := `UPDATE cars 
 	SET make = $1, model = $2, year = $3, description = $4, image_url = $5, gearbox = $6, drivetrain = $7, horsepower = $8, fuel = $9, price_new = $10, version = version + 1
 	WHERE id = $11 AND version = $12
@@ -160,7 +160,7 @@ func (m *PostgresCarStore) Update(car *Car) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&car.Version)
+	err := s.DB.QueryRowContext(ctx, query, args...).Scan(&car.Version)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -173,7 +173,7 @@ func (m *PostgresCarStore) Update(car *Car) error {
 	return nil
 }
 
-func (m *PostgresCarStore) Delete(id int64) error {
+func (s *PostgresCarStore) Delete(id int64) error {
 	if id < 1 {
 		return ErrRecordNotFound
 	}
@@ -183,7 +183,7 @@ func (m *PostgresCarStore) Delete(id int64) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	result, err := m.DB.ExecContext(ctx, query, id)
+	result, err := s.DB.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
 	}
@@ -200,7 +200,7 @@ func (m *PostgresCarStore) Delete(id int64) error {
 	return nil
 }
 
-func (m *PostgresCarStore) GetAll(carFilters *CarFilters) ([]*Car, Metadata, error) {
+func (s *PostgresCarStore) GetAll(carFilters *CarFilters) ([]*Car, Metadata, error) {
 	query := fmt.Sprintf(`
 	SELECT COUNT(*) OVER(), id, make, model, year, description, image_url, gearbox, drivetrain, horsepower, fuel, price_new, version
 	FROM cars
@@ -237,7 +237,7 @@ func (m *PostgresCarStore) GetAll(carFilters *CarFilters) ([]*Car, Metadata, err
 		carFilters.Filters.offset(),
 	}
 
-	rows, err := m.DB.QueryContext(ctx, query, args...)
+	rows, err := s.DB.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, Metadata{}, err
 	}
